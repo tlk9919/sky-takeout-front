@@ -20,9 +20,9 @@
         </el-form-item>
         <div class="subBox">
           <el-button type="primary" @click="submitForm('ruleForm',false)">保存</el-button>
-          <el-button 
-            v-if="this.optType === 'add'" 
-            type="primary" 
+          <el-button
+            v-if="this.optType === 'add'"
+            type="primary"
             @click="submitForm('ruleForm',true)">保存并继续添加员工
           </el-button>
           <el-button @click="() => this.$router.push('/employee')">返回</el-button>
@@ -33,9 +33,81 @@
 </template>
 
 <script lang="ts">
-
+import {addEmployee} from '@/api/employee'
 export default {
-  
+  data(){
+    return{
+      optType: 'add',
+      ruleForm: {
+        username: '',
+        name: '',
+        phone: '',
+        sex: '1',
+        idNumber: ''
+      },
+      rules: {
+        username: [
+          { required: true, message: '请输入员工账号', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        name: [
+          { required: true, message: '请输入员工姓名', trigger: 'blur' },
+        ],
+        phone: [
+          { required: true, trigger: 'blur' , validator: (rule,vaule,callback)=>{
+            if (vaule===''||(!/^1[3456789]\d{9}$/.test(vaule))){
+              callback(new Error('手机号格式有误'))
+            }
+            else {
+              callback()
+            }
+            }},
+        ],
+        sex: [
+          { required: true, message: '请选择性别',}
+        ],
+        idNumber: [
+          { required: true, trigger: 'blur' , validator: (rule,vaule,callback)=>{
+              if (vaule===''||(!/^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/.test(vaule))){
+                callback(new Error('身份证格式错误'))
+              }
+              else {
+                callback()
+              }
+            }},
+        ]
+      }
+    }
+  },
+  methods:{
+    submitForm(formName: string,isContinue:boolean){
+      //表单校验
+      this.$refs[formName].validate((valid: boolean)=>{
+        if (valid) {
+          addEmployee(this.ruleForm).then(res=>{
+            if (res.data.code === 1) {
+              this.$message.success('添加员工成功')
+              if (isContinue){
+                this.ruleForm = {
+                  username: '',
+                  name: '',
+                  phone: '',
+                  sex: '1',
+                  idNumber: ''
+                }
+              }
+              else {
+                this.$router.push('/employee')
+              }
+            }
+            else {
+              this.$message.error(res.data.msg)
+            }
+          })
+        }
+      })
+    }
+  }
 }
 </script>
 
