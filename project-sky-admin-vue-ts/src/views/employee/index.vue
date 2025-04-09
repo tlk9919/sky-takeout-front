@@ -39,7 +39,7 @@
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button type="text">修改</el-button>
+            <el-button type="text" @click="handleUpdateEmp(scope.row)">修改</el-button>
             <el-button type="text" @click="handleStartOrStop(scope.row)">{{scope.row.status == 1 ? '禁用' : '启用'}}</el-button>
           </template>
         </el-table-column>
@@ -129,6 +129,14 @@ methods: {
   //跳转到新增员工页面
   handleAddEmp(){
     this.$router.push({path:'/employee/add'})
+  },
+  // 跳转到修改员工页面
+  handleUpdateEmp(row){
+    if (row.username == 'admin') {
+      this.$message.warning('系统管理员，不能修改')
+      return
+    }
+    this.$router.push({path:'/employee/add',query:{id:row.id}})
   }
 }
 }

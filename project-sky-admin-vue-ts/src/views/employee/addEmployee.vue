@@ -33,11 +33,11 @@
 </template>
 
 <script lang="ts">
-import {addEmployee} from '@/api/employee'
+import {addEmployee,getEmployeeById,editEmployee} from '@/api/employee'
 export default {
   data(){
     return{
-      optType: 'add',
+      optType: '',
       ruleForm: {
         username: '',
         name: '',
@@ -79,31 +79,54 @@ export default {
       }
     }
   },
+  created(){
+    // 判断是添加员工还是修改员工，获取路由参数
+    this.optType = this.$route.query.id? 'update':'add'
+    if (this.optType === 'update'){
+      // 获取员工信息，用于页面回显
+      getEmployeeById(this.$route.query.id).then(res=>{
+        if (res.data.code === 1) {
+          this.ruleForm = res.data.data
+        }
+      })
+    }
+  },
   methods:{
     submitForm(formName: string,isContinue:boolean){
       //表单校验
       this.$refs[formName].validate((valid: boolean)=>{
         if (valid) {
-          addEmployee(this.ruleForm).then(res=>{
-            if (res.data.code === 1) {
-              this.$message.success('添加员工成功')
-              if (isContinue){
-                this.ruleForm = {
-                  username: '',
-                  name: '',
-                  phone: '',
-                  sex: '1',
-                  idNumber: ''
+          //判断是新增还是修改
+          if (this.optType === 'update'){
+            editEmployee(this.ruleForm).then(res=>{
+              if (res.data.code === 1) {
+                this.$message.success('修改员工成功')
+                this.$router.push('/employee')
+              }
+            })
+          }
+          else {
+            addEmployee(this.ruleForm).then(res=>{
+              if (res.data.code === 1) {
+                this.$message.success('添加员工成功')
+                if (isContinue){
+                  this.ruleForm = {
+                    username: '',
+                    name: '',
+                    phone: '',
+                    sex: '1',
+                    idNumber: ''
+                  }
+                }
+                else {
+                  this.$router.push('/employee')
                 }
               }
               else {
-                this.$router.push('/employee')
+                this.$message.error(res.data.msg)
               }
-            }
-            else {
-              this.$message.error(res.data.msg)
-            }
-          })
+            })
+          }
         }
       })
     }
