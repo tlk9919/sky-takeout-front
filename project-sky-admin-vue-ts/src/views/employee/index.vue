@@ -40,7 +40,7 @@
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button type="text">修改</el-button>
-            <el-button type="text">{{scope.row.status == 1 ? '禁用' : '启用'}}</el-button>
+            <el-button type="text" @click="handleStartOrStop(scope.row)">{{scope.row.status == 1 ? '禁用' : '启用'}}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -61,7 +61,7 @@
 
 </template>
 <script lang="ts">
-import {getEmployeeList} from '@/api/employee'
+import {getEmployeeList,enableOrDisableEmployee} from '@/api/employee'
 
 export default  {
   data() {
@@ -103,6 +103,28 @@ methods: {
   handleCurrentChange(page){
     this.page = page
     this.pageQuery()
+  }, // 禁用或启用
+  handleStartOrStop(row){
+    if (row.username == 'admin') {
+      this.$message.warning('系统管理员，，不能更改状态')
+      return
+    }
+    this.$confirm('确认要修改当前员工账号状态吗, 是否继续?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      const p = {
+        id: row.id,
+        status: row.status == 1 ? 0 : 1
+      }
+      enableOrDisableEmployee(p).then((response) => {
+        if (response.data.code == 1) {
+          this.$message.success('操作成功')
+          this.pageQuery()
+        }
+      })
+    })
   }
 }
 }
