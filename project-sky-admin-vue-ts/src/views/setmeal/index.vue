@@ -24,8 +24,8 @@
         </el-select>
           <el-button type="primary" style="margin-left: 5px" @click="pageQuery">查询</el-button>
         <div style="float: right">
-          <el-button type="info">+新增套餐</el-button>
-          <el-button type="danger" >批量删除</el-button>
+          <el-button type="info" @click="()=>this.$router.push('/setmeal/add')">+新增套餐</el-button>
+          <el-button type="danger"  @click="handleDelete('B',multipleSelection)">批量删除</el-button>
         </div>
         </div>
       <el-table :data="records" stripe class="tableBox" @selection-change="handleSelectionChange">
@@ -69,7 +69,7 @@
 
 <script lang="ts">
 import {getCategoryByType} from "@/api/category"
-import {getSetmealPage} from "@/api/setMeal"
+import {getSetmealPage,enableOrDisableSetmeal,deleteSetmeal} from "@/api/setMeal"
 export default {
   data() {
     return {
@@ -90,7 +90,8 @@ export default {
           label:''
         }
       ],
-      status:''
+      status:'',
+      multipleSelection: ''
     }
   },
   created() {
@@ -129,6 +130,56 @@ export default {
     handleCurrentChange(page){
       this.page = page
       this.pageQuery()
+    },
+    handleStartOrStop(row){
+      const p={
+        id: row.id,
+        status: row.status == 1 ? 0 : 1
+      }
+      this.$confirm('确定修改套餐售卖状态吗, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        enableOrDisableSetmeal(p).then(response=>{
+          if (response.data.code == 1){
+            this.$message.success('操作成功')
+            this.pageQuery()
+          }
+        })
+      })
+
+    },
+    handleDelete(type,id){
+      let param=''
+      if (type == 'B'){
+        const ids = []
+        this.multipleSelection.forEach(
+          item=> {
+            ids.push(item.id)
+          })
+        param=ids.join(',')
+      }
+      else {
+        param=id
+      }
+      this.$confirm('确定删除该套餐吗, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteSetmeal(param).then(response=>{
+          if (response.data.code == 1){
+            this.$message.success('删除成功')
+            this.pageQuery()
+          }else {
+            this.$message.error(response.data.msg)
+          }
+        })
+      })
+    },
+    handleSelectionChange(val){
+      this.multipleSelection = val
     }
   }
 }
